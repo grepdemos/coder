@@ -33,7 +33,8 @@ CREATE TYPE build_reason AS ENUM (
     'autostop',
     'dormancy',
     'failedstop',
-    'autodelete'
+    'autodelete',
+    'transfer'
 );
 
 CREATE TYPE display_app AS ENUM (
