@@ -74,6 +74,7 @@ type sqlcQuerier interface {
 	DeleteGitSSHKey(ctx context.Context, userID uuid.UUID) error
 	DeleteGroupByID(ctx context.Context, id uuid.UUID) error
 	DeleteGroupMemberFromGroup(ctx context.Context, arg DeleteGroupMemberFromGroupParams) error
+	DeleteKey(ctx context.Context, arg DeleteKeyParams) error
 	DeleteLicense(ctx context.Context, id int32) (int32, error)
 	DeleteOAuth2ProviderAppByID(ctx context.Context, id uuid.UUID) error
 	DeleteOAuth2ProviderAppCodeByID(ctx context.Context, id uuid.UUID) error
@@ -158,6 +159,8 @@ type sqlcQuerier interface {
 	GetHealthSettings(ctx context.Context) (string, error)
 	GetHungProvisionerJobs(ctx context.Context, updatedAt time.Time) ([]ProvisionerJob, error)
 	GetJFrogXrayScanByWorkspaceAndAgentID(ctx context.Context, arg GetJFrogXrayScanByWorkspaceAndAgentIDParams) (JfrogXrayScan, error)
+	GetKeyByFeatureAndSequence(ctx context.Context, arg GetKeyByFeatureAndSequenceParams) (Key, error)
+	GetKeys(ctx context.Context) ([]Key, error)
 	GetLastUpdateCheck(ctx context.Context) (string, error)
 	GetLatestWorkspaceBuildByWorkspaceID(ctx context.Context, workspaceID uuid.UUID) (WorkspaceBuild, error)
 	GetLatestWorkspaceBuilds(ctx context.Context) ([]WorkspaceBuild, error)
@@ -346,6 +349,7 @@ type sqlcQuerier interface {
 	InsertGitSSHKey(ctx context.Context, arg InsertGitSSHKeyParams) (GitSSHKey, error)
 	InsertGroup(ctx context.Context, arg InsertGroupParams) (Group, error)
 	InsertGroupMember(ctx context.Context, arg InsertGroupMemberParams) error
+	InsertKey(ctx context.Context, arg InsertKeyParams) error
 	InsertLicense(ctx context.Context, arg InsertLicenseParams) (License, error)
 	// Inserts any group by name that does not exist. All new groups are given
 	// a random uuid, are inserted into the same organization. They have the default
@@ -415,6 +419,7 @@ type sqlcQuerier interface {
 	UpdateGitSSHKey(ctx context.Context, arg UpdateGitSSHKeyParams) (GitSSHKey, error)
 	UpdateGroupByID(ctx context.Context, arg UpdateGroupByIDParams) (Group, error)
 	UpdateInactiveUsersToDormant(ctx context.Context, arg UpdateInactiveUsersToDormantParams) ([]UpdateInactiveUsersToDormantRow, error)
+	UpdateKeyDeletesAt(ctx context.Context, arg UpdateKeyDeletesAtParams) error
 	UpdateMemberRoles(ctx context.Context, arg UpdateMemberRolesParams) (OrganizationMember, error)
 	UpdateNotificationTemplateMethodByID(ctx context.Context, arg UpdateNotificationTemplateMethodByIDParams) (NotificationTemplate, error)
 	UpdateOAuth2ProviderAppByID(ctx context.Context, arg UpdateOAuth2ProviderAppByIDParams) (OAuth2ProviderApp, error)

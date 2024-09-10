@@ -3164,6 +3164,134 @@ func (q *sqlQuerier) UpsertJFrogXrayScanByWorkspaceAndAgentID(ctx context.Contex
 	return err
 }
 
+const deleteKey = `-- name: DeleteKey :exec
+UPDATE keys
+SET secret = NULL
+WHERE feature = $1 AND sequence = $2
+`
+
+type DeleteKeyParams struct {
+	Feature  string `db:"feature" json:"feature"`
+	Sequence int32  `db:"sequence" json:"sequence"`
+}
+
+func (q *sqlQuerier) DeleteKey(ctx context.Context, arg DeleteKeyParams) error {
+	_, err := q.db.ExecContext(ctx, deleteKey, arg.Feature, arg.Sequence)
+	return err
+}
+
+const getKeyByFeatureAndSequence = `-- name: GetKeyByFeatureAndSequence :one
+SELECT feature, sequence, secret, starts_at, deletes_at
+FROM keys
+WHERE feature = $1
+  AND sequence = $2
+  AND secret IS NOT NULL
+  AND $3 >= starts_at
+  AND ($3 < deletes_at OR deletes_at IS NULL)
+`
+
+type GetKeyByFeatureAndSequenceParams struct {
+	Feature  string    `db:"feature" json:"feature"`
+	Sequence int32     `db:"sequence" json:"sequence"`
+	StartsAt time.Time `db:"starts_at" json:"starts_at"`
+}
+
+func (q *sqlQuerier) GetKeyByFeatureAndSequence(ctx context.Context, arg GetKeyByFeatureAndSequenceParams) (Key, error) {
+	row := q.db.QueryRowContext(ctx, getKeyByFeatureAndSequence, arg.Feature, arg.Sequence, arg.StartsAt)
+	var i Key
+	err := row.Scan(
+		&i.Feature,
+		&i.Sequence,
+		&i.Secret,
+		&i.StartsAt,
+		&i.DeletesAt,
+	)
+	return i, err
+}
+
+const getKeys = `-- name: GetKeys :many
+SELECT feature, sequence, secret, starts_at, deletes_at
+FROM keys
+WHERE secret IS NOT NULL
+`
+
+func (q *sqlQuerier) GetKeys(ctx context.Context) ([]Key, error) {
+	rows, err := q.db.QueryContext(ctx, getKeys)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Key
+	for rows.Next() {
+		var i Key
+		if err := rows.Scan(
+			&i.Feature,
+			&i.Sequence,
+			&i.Secret,
+			&i.StartsAt,
+			&i.DeletesAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertKey = `-- name: InsertKey :exec
+INSERT INTO keys (
+    feature,
+    sequence,
+    secret,
+    starts_at
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4
+)
+`
+
+type InsertKeyParams struct {
+	Feature  string         `db:"feature" json:"feature"`
+	Sequence int32          `db:"sequence" json:"sequence"`
+	Secret   sql.NullString `db:"secret" json:"secret"`
+	StartsAt time.Time      `db:"starts_at" json:"starts_at"`
+}
+
+func (q *sqlQuerier) InsertKey(ctx context.Context, arg InsertKeyParams) error {
+	_, err := q.db.ExecContext(ctx, insertKey,
+		arg.Feature,
+		arg.Sequence,
+		arg.Secret,
+		arg.StartsAt,
+	)
+	return err
+}
+
+const updateKeyDeletesAt = `-- name: UpdateKeyDeletesAt :exec
+UPDATE keys
+SET deletes_at = $3
+WHERE feature = $1 AND sequence = $2
+`
+
+type UpdateKeyDeletesAtParams struct {
+	Feature   string       `db:"feature" json:"feature"`
+	Sequence  int32        `db:"sequence" json:"sequence"`
+	DeletesAt sql.NullTime `db:"deletes_at" json:"deletes_at"`
+}
+
+func (q *sqlQuerier) UpdateKeyDeletesAt(ctx context.Context, arg UpdateKeyDeletesAtParams) error {
+	_, err := q.db.ExecContext(ctx, updateKeyDeletesAt, arg.Feature, arg.Sequence, arg.DeletesAt)
+	return err
+}
+
 const deleteLicense = `-- name: DeleteLicense :one
 DELETE
 FROM licenses

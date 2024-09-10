@@ -1527,6 +1527,15 @@ func (q *FakeQuerier) DeleteGroupMemberFromGroup(_ context.Context, arg database
 	return nil
 }
 
+func (q *FakeQuerier) DeleteKey(ctx context.Context, arg database.DeleteKeyParams) error {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return err
+	}
+
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) DeleteLicense(_ context.Context, id int32) (int32, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -2794,6 +2803,19 @@ func (q *FakeQuerier) GetJFrogXrayScanByWorkspaceAndAgentID(_ context.Context, a
 	}
 
 	return database.JfrogXrayScan{}, sql.ErrNoRows
+}
+
+func (q *FakeQuerier) GetKeyByFeatureAndSequence(ctx context.Context, arg database.GetKeyByFeatureAndSequenceParams) (database.Key, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.Key{}, err
+	}
+
+	panic("not implemented")
+}
+
+func (q *FakeQuerier) GetKeys(ctx context.Context) ([]database.Key, error) {
+	panic("not implemented")
 }
 
 func (q *FakeQuerier) GetLastUpdateCheck(_ context.Context) (string, error) {
@@ -6492,6 +6514,15 @@ func (q *FakeQuerier) InsertGroupMember(_ context.Context, arg database.InsertGr
 	return nil
 }
 
+func (q *FakeQuerier) InsertKey(ctx context.Context, arg database.InsertKeyParams) error {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return err
+	}
+
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) InsertLicense(
 	_ context.Context, arg database.InsertLicenseParams,
 ) (database.License, error) {
@@ -7888,6 +7919,15 @@ func (q *FakeQuerier) UpdateInactiveUsersToDormant(_ context.Context, params dat
 		return nil, sql.ErrNoRows
 	}
 	return updated, nil
+}
+
+func (q *FakeQuerier) UpdateKeyDeletesAt(ctx context.Context, arg database.UpdateKeyDeletesAtParams) error {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return err
+	}
+
+	panic("not implemented")
 }
 
 func (q *FakeQuerier) UpdateMemberRoles(_ context.Context, arg database.UpdateMemberRolesParams) (database.OrganizationMember, error) {

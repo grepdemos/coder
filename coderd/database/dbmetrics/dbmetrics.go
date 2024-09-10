@@ -249,6 +249,13 @@ func (m metricsStore) DeleteGroupMemberFromGroup(ctx context.Context, arg databa
 	return err
 }
 
+func (m metricsStore) DeleteKey(ctx context.Context, arg database.DeleteKeyParams) error {
+	start := time.Now()
+	r0 := m.s.DeleteKey(ctx, arg)
+	m.queryLatencies.WithLabelValues("DeleteKey").Observe(time.Since(start).Seconds())
+	return r0
+}
+
 func (m metricsStore) DeleteLicense(ctx context.Context, id int32) (int32, error) {
 	start := time.Now()
 	licenseID, err := m.s.DeleteLicense(ctx, id)
@@ -701,6 +708,20 @@ func (m metricsStore) GetJFrogXrayScanByWorkspaceAndAgentID(ctx context.Context,
 	start := time.Now()
 	r0, r1 := m.s.GetJFrogXrayScanByWorkspaceAndAgentID(ctx, arg)
 	m.queryLatencies.WithLabelValues("GetJFrogXrayScanByWorkspaceAndAgentID").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
+func (m metricsStore) GetKeyByFeatureAndSequence(ctx context.Context, arg database.GetKeyByFeatureAndSequenceParams) (database.Key, error) {
+	start := time.Now()
+	r0, r1 := m.s.GetKeyByFeatureAndSequence(ctx, arg)
+	m.queryLatencies.WithLabelValues("GetKeyByFeatureAndSequence").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
+func (m metricsStore) GetKeys(ctx context.Context) ([]database.Key, error) {
+	start := time.Now()
+	r0, r1 := m.s.GetKeys(ctx)
+	m.queryLatencies.WithLabelValues("GetKeys").Observe(time.Since(start).Seconds())
 	return r0, r1
 }
 
@@ -1656,6 +1677,13 @@ func (m metricsStore) InsertGroupMember(ctx context.Context, arg database.Insert
 	return err
 }
 
+func (m metricsStore) InsertKey(ctx context.Context, arg database.InsertKeyParams) error {
+	start := time.Now()
+	r0 := m.s.InsertKey(ctx, arg)
+	m.queryLatencies.WithLabelValues("InsertKey").Observe(time.Since(start).Seconds())
+	return r0
+}
+
 func (m metricsStore) InsertLicense(ctx context.Context, arg database.InsertLicenseParams) (database.License, error) {
 	start := time.Now()
 	license, err := m.s.InsertLicense(ctx, arg)
@@ -2025,6 +2053,13 @@ func (m metricsStore) UpdateInactiveUsersToDormant(ctx context.Context, lastSeen
 	r0, r1 := m.s.UpdateInactiveUsersToDormant(ctx, lastSeenAfter)
 	m.queryLatencies.WithLabelValues("UpdateInactiveUsersToDormant").Observe(time.Since(start).Seconds())
 	return r0, r1
+}
+
+func (m metricsStore) UpdateKeyDeletesAt(ctx context.Context, arg database.UpdateKeyDeletesAtParams) error {
+	start := time.Now()
+	r0 := m.s.UpdateKeyDeletesAt(ctx, arg)
+	m.queryLatencies.WithLabelValues("UpdateKeyDeletesAt").Observe(time.Since(start).Seconds())
+	return r0
 }
 
 func (m metricsStore) UpdateMemberRoles(ctx context.Context, arg database.UpdateMemberRolesParams) (database.OrganizationMember, error) {

@@ -1078,6 +1078,10 @@ func (q *querier) DeleteGroupMemberFromGroup(ctx context.Context, arg database.D
 	return update(q.log, q.auth, fetch, q.db.DeleteGroupMemberFromGroup)(ctx, arg)
 }
 
+func (q *querier) DeleteKey(ctx context.Context, arg database.DeleteKeyParams) error {
+	panic("not implemented")
+}
+
 func (q *querier) DeleteLicense(ctx context.Context, id int32) (int32, error) {
 	err := deleteQ(q.log, q.auth, q.db.GetLicenseByID, func(ctx context.Context, id int32) error {
 		_, err := q.db.DeleteLicense(ctx, id)
@@ -1540,6 +1544,14 @@ func (q *querier) GetJFrogXrayScanByWorkspaceAndAgentID(ctx context.Context, arg
 		return database.JfrogXrayScan{}, err
 	}
 	return q.db.GetJFrogXrayScanByWorkspaceAndAgentID(ctx, arg)
+}
+
+func (q *querier) GetKeyByFeatureAndSequence(ctx context.Context, arg database.GetKeyByFeatureAndSequenceParams) (database.Key, error) {
+	panic("not implemented")
+}
+
+func (q *querier) GetKeys(ctx context.Context) ([]database.Key, error) {
+	panic("not implemented")
 }
 
 func (q *querier) GetLastUpdateCheck(ctx context.Context) (string, error) {
@@ -2726,6 +2738,10 @@ func (q *querier) InsertGroupMember(ctx context.Context, arg database.InsertGrou
 	return update(q.log, q.auth, fetch, q.db.InsertGroupMember)(ctx, arg)
 }
 
+func (q *querier) InsertKey(ctx context.Context, arg database.InsertKeyParams) error {
+	panic("not implemented")
+}
+
 func (q *querier) InsertLicense(ctx context.Context, arg database.InsertLicenseParams) (database.License, error) {
 	if err := q.authorizeContext(ctx, policy.ActionCreate, rbac.ResourceLicense); err != nil {
 		return database.License{}, err
@@ -3210,6 +3226,10 @@ func (q *querier) UpdateInactiveUsersToDormant(ctx context.Context, lastSeenAfte
 		return nil, err
 	}
 	return q.db.UpdateInactiveUsersToDormant(ctx, lastSeenAfter)
+}
+
+func (q *querier) UpdateKeyDeletesAt(ctx context.Context, arg database.UpdateKeyDeletesAtParams) error {
+	panic("not implemented")
 }
 
 func (q *querier) UpdateMemberRoles(ctx context.Context, arg database.UpdateMemberRolesParams) (database.OrganizationMember, error) {

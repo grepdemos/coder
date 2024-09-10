@@ -668,6 +668,14 @@ CREATE TABLE jfrog_xray_scans (
     results_url text DEFAULT ''::text NOT NULL
 );
 
+CREATE TABLE keys (
+    feature text NOT NULL,
+    sequence integer NOT NULL,
+    secret text,
+    starts_at timestamp with time zone NOT NULL,
+    deletes_at timestamp with time zone
+);
+
 CREATE TABLE licenses (
     id integer NOT NULL,
     uploaded_at timestamp with time zone NOT NULL,
@@ -1675,6 +1683,9 @@ ALTER TABLE ONLY groups
 
 ALTER TABLE ONLY jfrog_xray_scans
     ADD CONSTRAINT jfrog_xray_scans_pkey PRIMARY KEY (agent_id, workspace_id);
+
+ALTER TABLE ONLY keys
+    ADD CONSTRAINT keys_pkey PRIMARY KEY (feature, sequence);
 
 ALTER TABLE ONLY licenses
     ADD CONSTRAINT licenses_jwt_key UNIQUE (jwt);

@@ -2155,6 +2155,14 @@ type JfrogXrayScan struct {
 	ResultsUrl  string    `db:"results_url" json:"results_url"`
 }
 
+type Key struct {
+	Feature   string         `db:"feature" json:"feature"`
+	Sequence  int32          `db:"sequence" json:"sequence"`
+	Secret    sql.NullString `db:"secret" json:"secret"`
+	StartsAt  time.Time      `db:"starts_at" json:"starts_at"`
+	DeletesAt sql.NullTime   `db:"deletes_at" json:"deletes_at"`
+}
+
 type License struct {
 	ID         int32     `db:"id" json:"id"`
 	UploadedAt time.Time `db:"uploaded_at" json:"uploaded_at"`
