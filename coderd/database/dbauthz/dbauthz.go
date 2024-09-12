@@ -1041,6 +1041,10 @@ func (q *querier) DeleteCoordinator(ctx context.Context, id uuid.UUID) error {
 	return q.db.DeleteCoordinator(ctx, id)
 }
 
+func (q *querier) DeleteCryptoKey(ctx context.Context, arg database.DeleteCryptoKeyParams) (database.CryptoKey, error) {
+	panic("not implemented")
+}
+
 func (q *querier) DeleteCustomRole(ctx context.Context, arg database.DeleteCustomRoleParams) error {
 	if arg.OrganizationID.UUID != uuid.Nil {
 		if err := q.authorizeContext(ctx, policy.ActionDelete, rbac.ResourceAssignOrgRole.InOrg(arg.OrganizationID.UUID)); err != nil {
@@ -1076,10 +1080,6 @@ func (q *querier) DeleteGroupMemberFromGroup(ctx context.Context, arg database.D
 		return q.db.GetGroupByID(ctx, arg.GroupID)
 	}
 	return update(q.log, q.auth, fetch, q.db.DeleteGroupMemberFromGroup)(ctx, arg)
-}
-
-func (q *querier) DeleteKey(ctx context.Context, arg database.DeleteKeyParams) error {
-	panic("not implemented")
 }
 
 func (q *querier) DeleteLicense(ctx context.Context, id int32) (int32, error) {
@@ -1387,6 +1387,14 @@ func (q *querier) GetCoordinatorResumeTokenSigningKey(ctx context.Context) (stri
 	return q.db.GetCoordinatorResumeTokenSigningKey(ctx)
 }
 
+func (q *querier) GetCryptoKeyByFeatureAndSequence(ctx context.Context, arg database.GetCryptoKeyByFeatureAndSequenceParams) (database.CryptoKey, error) {
+	panic("not implemented")
+}
+
+func (q *querier) GetCryptoKeys(ctx context.Context) ([]database.CryptoKey, error) {
+	panic("not implemented")
+}
+
 func (q *querier) GetDBCryptKeys(ctx context.Context) ([]database.DBCryptKey, error) {
 	if err := q.authorizeContext(ctx, policy.ActionRead, rbac.ResourceSystem); err != nil {
 		return nil, err
@@ -1546,19 +1554,15 @@ func (q *querier) GetJFrogXrayScanByWorkspaceAndAgentID(ctx context.Context, arg
 	return q.db.GetJFrogXrayScanByWorkspaceAndAgentID(ctx, arg)
 }
 
-func (q *querier) GetKeyByFeatureAndSequence(ctx context.Context, arg database.GetKeyByFeatureAndSequenceParams) (database.Key, error) {
-	panic("not implemented")
-}
-
-func (q *querier) GetKeys(ctx context.Context) ([]database.Key, error) {
-	panic("not implemented")
-}
-
 func (q *querier) GetLastUpdateCheck(ctx context.Context) (string, error) {
 	if err := q.authorizeContext(ctx, policy.ActionRead, rbac.ResourceSystem); err != nil {
 		return "", err
 	}
 	return q.db.GetLastUpdateCheck(ctx)
+}
+
+func (q *querier) GetLatestCryptoKeyByFeature(ctx context.Context, feature database.CryptoKeyFeature) (database.CryptoKey, error) {
+	panic("not implemented")
 }
 
 func (q *querier) GetLatestWorkspaceBuildByWorkspaceID(ctx context.Context, workspaceID uuid.UUID) (database.WorkspaceBuild, error) {
@@ -2666,6 +2670,10 @@ func (q *querier) InsertAuditLog(ctx context.Context, arg database.InsertAuditLo
 	return insert(q.log, q.auth, rbac.ResourceAuditLog, q.db.InsertAuditLog)(ctx, arg)
 }
 
+func (q *querier) InsertCryptoKey(ctx context.Context, arg database.InsertCryptoKeyParams) (database.CryptoKey, error) {
+	panic("not implemented")
+}
+
 func (q *querier) InsertCustomRole(ctx context.Context, arg database.InsertCustomRoleParams) (database.CustomRole, error) {
 	// Org and site role upsert share the same query. So switch the assertion based on the org uuid.
 	if arg.OrganizationID.UUID != uuid.Nil {
@@ -2736,10 +2744,6 @@ func (q *querier) InsertGroupMember(ctx context.Context, arg database.InsertGrou
 		return q.db.GetGroupByID(ctx, arg.GroupID)
 	}
 	return update(q.log, q.auth, fetch, q.db.InsertGroupMember)(ctx, arg)
-}
-
-func (q *querier) InsertKey(ctx context.Context, arg database.InsertKeyParams) error {
-	panic("not implemented")
 }
 
 func (q *querier) InsertLicense(ctx context.Context, arg database.InsertLicenseParams) (database.License, error) {
@@ -3173,6 +3177,10 @@ func (q *querier) UpdateAPIKeyByID(ctx context.Context, arg database.UpdateAPIKe
 	return update(q.log, q.auth, fetch, q.db.UpdateAPIKeyByID)(ctx, arg)
 }
 
+func (q *querier) UpdateCryptoKeyDeletesAt(ctx context.Context, arg database.UpdateCryptoKeyDeletesAtParams) (database.CryptoKey, error) {
+	panic("not implemented")
+}
+
 func (q *querier) UpdateCustomRole(ctx context.Context, arg database.UpdateCustomRoleParams) (database.CustomRole, error) {
 	if arg.OrganizationID.UUID != uuid.Nil {
 		if err := q.authorizeContext(ctx, policy.ActionUpdate, rbac.ResourceAssignOrgRole.InOrg(arg.OrganizationID.UUID)); err != nil {
@@ -3226,10 +3234,6 @@ func (q *querier) UpdateInactiveUsersToDormant(ctx context.Context, lastSeenAfte
 		return nil, err
 	}
 	return q.db.UpdateInactiveUsersToDormant(ctx, lastSeenAfter)
-}
-
-func (q *querier) UpdateKeyDeletesAt(ctx context.Context, arg database.UpdateKeyDeletesAtParams) error {
-	panic("not implemented")
 }
 
 func (q *querier) UpdateMemberRoles(ctx context.Context, arg database.UpdateMemberRolesParams) (database.OrganizationMember, error) {

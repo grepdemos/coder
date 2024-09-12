@@ -36,6 +36,12 @@ CREATE TYPE build_reason AS ENUM (
     'autodelete'
 );
 
+CREATE TYPE crypto_key_feature AS ENUM (
+    'workspace_apps',
+    'oidc_convert',
+    'peer_reconnect'
+);
+
 CREATE TYPE display_app AS ENUM (
     'vscode',
     'vscode_insiders',
@@ -494,6 +500,14 @@ CREATE TABLE audit_logs (
     resource_icon text NOT NULL
 );
 
+CREATE TABLE crypto_keys (
+    feature crypto_key_feature NOT NULL,
+    sequence integer NOT NULL,
+    secret text,
+    starts_at timestamp with time zone NOT NULL,
+    deletes_at timestamp with time zone
+);
+
 CREATE TABLE custom_roles (
     name text NOT NULL,
     display_name text NOT NULL,
@@ -666,14 +680,6 @@ CREATE TABLE jfrog_xray_scans (
     high integer DEFAULT 0 NOT NULL,
     medium integer DEFAULT 0 NOT NULL,
     results_url text DEFAULT ''::text NOT NULL
-);
-
-CREATE TABLE keys (
-    feature text NOT NULL,
-    sequence integer NOT NULL,
-    secret text,
-    starts_at timestamp with time zone NOT NULL,
-    deletes_at timestamp with time zone
 );
 
 CREATE TABLE licenses (
@@ -1648,6 +1654,9 @@ ALTER TABLE ONLY api_keys
 ALTER TABLE ONLY audit_logs
     ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY crypto_keys
+    ADD CONSTRAINT crypto_keys_pkey PRIMARY KEY (feature, sequence);
+
 ALTER TABLE ONLY custom_roles
     ADD CONSTRAINT custom_roles_unique_key UNIQUE (name, organization_id);
 
@@ -1683,9 +1692,6 @@ ALTER TABLE ONLY groups
 
 ALTER TABLE ONLY jfrog_xray_scans
     ADD CONSTRAINT jfrog_xray_scans_pkey PRIMARY KEY (agent_id, workspace_id);
-
-ALTER TABLE ONLY keys
-    ADD CONSTRAINT keys_pkey PRIMARY KEY (feature, sequence);
 
 ALTER TABLE ONLY licenses
     ADD CONSTRAINT licenses_jwt_key UNIQUE (jwt);

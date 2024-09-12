@@ -1434,6 +1434,15 @@ func (*FakeQuerier) DeleteCoordinator(context.Context, uuid.UUID) error {
 	return ErrUnimplemented
 }
 
+func (q *FakeQuerier) DeleteCryptoKey(ctx context.Context, arg database.DeleteCryptoKeyParams) (database.CryptoKey, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.CryptoKey{}, err
+	}
+
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) DeleteCustomRole(_ context.Context, arg database.DeleteCustomRoleParams) error {
 	err := validateDatabaseType(arg)
 	if err != nil {
@@ -1525,15 +1534,6 @@ func (q *FakeQuerier) DeleteGroupMemberFromGroup(_ context.Context, arg database
 		}
 	}
 	return nil
-}
-
-func (q *FakeQuerier) DeleteKey(ctx context.Context, arg database.DeleteKeyParams) error {
-	err := validateDatabaseType(arg)
-	if err != nil {
-		return err
-	}
-
-	panic("not implemented")
 }
 
 func (q *FakeQuerier) DeleteLicense(_ context.Context, id int32) (int32, error) {
@@ -2318,6 +2318,19 @@ func (q *FakeQuerier) GetCoordinatorResumeTokenSigningKey(_ context.Context) (st
 	return q.coordinatorResumeTokenSigningKey, nil
 }
 
+func (q *FakeQuerier) GetCryptoKeyByFeatureAndSequence(ctx context.Context, arg database.GetCryptoKeyByFeatureAndSequenceParams) (database.CryptoKey, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.CryptoKey{}, err
+	}
+
+	panic("not implemented")
+}
+
+func (q *FakeQuerier) GetCryptoKeys(ctx context.Context) ([]database.CryptoKey, error) {
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) GetDBCryptKeys(_ context.Context) ([]database.DBCryptKey, error) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
@@ -2805,19 +2818,6 @@ func (q *FakeQuerier) GetJFrogXrayScanByWorkspaceAndAgentID(_ context.Context, a
 	return database.JfrogXrayScan{}, sql.ErrNoRows
 }
 
-func (q *FakeQuerier) GetKeyByFeatureAndSequence(ctx context.Context, arg database.GetKeyByFeatureAndSequenceParams) (database.Key, error) {
-	err := validateDatabaseType(arg)
-	if err != nil {
-		return database.Key{}, err
-	}
-
-	panic("not implemented")
-}
-
-func (q *FakeQuerier) GetKeys(ctx context.Context) ([]database.Key, error) {
-	panic("not implemented")
-}
-
 func (q *FakeQuerier) GetLastUpdateCheck(_ context.Context) (string, error) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
@@ -2826,6 +2826,10 @@ func (q *FakeQuerier) GetLastUpdateCheck(_ context.Context) (string, error) {
 		return "", sql.ErrNoRows
 	}
 	return string(q.lastUpdateCheck), nil
+}
+
+func (q *FakeQuerier) GetLatestCryptoKeyByFeature(ctx context.Context, feature database.CryptoKeyFeature) (database.CryptoKey, error) {
+	panic("not implemented")
 }
 
 func (q *FakeQuerier) GetLatestWorkspaceBuildByWorkspaceID(ctx context.Context, workspaceID uuid.UUID) (database.WorkspaceBuild, error) {
@@ -6327,6 +6331,15 @@ func (q *FakeQuerier) InsertAuditLog(_ context.Context, arg database.InsertAudit
 	return alog, nil
 }
 
+func (q *FakeQuerier) InsertCryptoKey(ctx context.Context, arg database.InsertCryptoKeyParams) (database.CryptoKey, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.CryptoKey{}, err
+	}
+
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) InsertCustomRole(_ context.Context, arg database.InsertCustomRoleParams) (database.CustomRole, error) {
 	err := validateDatabaseType(arg)
 	if err != nil {
@@ -6512,15 +6525,6 @@ func (q *FakeQuerier) InsertGroupMember(_ context.Context, arg database.InsertGr
 	})
 
 	return nil
-}
-
-func (q *FakeQuerier) InsertKey(ctx context.Context, arg database.InsertKeyParams) error {
-	err := validateDatabaseType(arg)
-	if err != nil {
-		return err
-	}
-
-	panic("not implemented")
 }
 
 func (q *FakeQuerier) InsertLicense(
@@ -7805,6 +7809,15 @@ func (q *FakeQuerier) UpdateAPIKeyByID(_ context.Context, arg database.UpdateAPI
 	return sql.ErrNoRows
 }
 
+func (q *FakeQuerier) UpdateCryptoKeyDeletesAt(ctx context.Context, arg database.UpdateCryptoKeyDeletesAtParams) (database.CryptoKey, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.CryptoKey{}, err
+	}
+
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) UpdateCustomRole(_ context.Context, arg database.UpdateCustomRoleParams) (database.CustomRole, error) {
 	err := validateDatabaseType(arg)
 	if err != nil {
@@ -7919,15 +7932,6 @@ func (q *FakeQuerier) UpdateInactiveUsersToDormant(_ context.Context, params dat
 		return nil, sql.ErrNoRows
 	}
 	return updated, nil
-}
-
-func (q *FakeQuerier) UpdateKeyDeletesAt(ctx context.Context, arg database.UpdateKeyDeletesAtParams) error {
-	err := validateDatabaseType(arg)
-	if err != nil {
-		return err
-	}
-
-	panic("not implemented")
 }
 
 func (q *FakeQuerier) UpdateMemberRoles(_ context.Context, arg database.UpdateMemberRolesParams) (database.OrganizationMember, error) {

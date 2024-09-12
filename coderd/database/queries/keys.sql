@@ -1,25 +1,32 @@
--- name: GetKeys :many
+-- name: GetCryptoKeys :many
 SELECT *
-FROM keys
+FROM crypto_keys
 WHERE secret IS NOT NULL;
 
--- name: GetKeyByFeatureAndSequence :one
+-- name: GetLatestCryptoKeyByFeature :one
 SELECT *
-FROM keys
+FROM crypto_keys
+WHERE feature = $1
+ORDER BY sequence DESC
+LIMIT 1;
+
+
+-- name: GetCryptoKeyByFeatureAndSequence :one
+SELECT *
+FROM crypto_keys
 WHERE feature = $1
   AND sequence = $2
   AND secret IS NOT NULL
   AND $3 >= starts_at
   AND ($3 < deletes_at OR deletes_at IS NULL);
 
--- name: DeleteKey :exec
-UPDATE keys
+-- name: DeleteCryptoKey :one
+UPDATE crypto_keys
 SET secret = NULL
-WHERE feature = $1 AND sequence = $2;
+WHERE feature = $1 AND sequence = $2 RETURNING *;
 
-
--- name: InsertKey :exec
-INSERT INTO keys (
+-- name: InsertCryptoKey :one
+INSERT INTO crypto_keys (
     feature,
     sequence,
     secret,
@@ -29,12 +36,12 @@ INSERT INTO keys (
     $2,
     $3,
     $4
-);
+) RETURNING *;
 
--- name: UpdateKeyDeletesAt :exec
-UPDATE keys
+-- name: UpdateCryptoKeyDeletesAt :one
+UPDATE crypto_keys
 SET deletes_at = $3
-WHERE feature = $1 AND sequence = $2;
+WHERE feature = $1 AND sequence = $2 RETURNING *;
 
 
 

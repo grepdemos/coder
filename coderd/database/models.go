@@ -339,6 +339,67 @@ func AllBuildReasonValues() []BuildReason {
 	}
 }
 
+type CryptoKeyFeature string
+
+const (
+	CryptoKeyFeatureWorkspaceApps CryptoKeyFeature = "workspace_apps"
+	CryptoKeyFeatureOidcConvert   CryptoKeyFeature = "oidc_convert"
+	CryptoKeyFeaturePeerReconnect CryptoKeyFeature = "peer_reconnect"
+)
+
+func (e *CryptoKeyFeature) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CryptoKeyFeature(s)
+	case string:
+		*e = CryptoKeyFeature(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CryptoKeyFeature: %T", src)
+	}
+	return nil
+}
+
+type NullCryptoKeyFeature struct {
+	CryptoKeyFeature CryptoKeyFeature `json:"crypto_key_feature"`
+	Valid            bool             `json:"valid"` // Valid is true if CryptoKeyFeature is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCryptoKeyFeature) Scan(value interface{}) error {
+	if value == nil {
+		ns.CryptoKeyFeature, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CryptoKeyFeature.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCryptoKeyFeature) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CryptoKeyFeature), nil
+}
+
+func (e CryptoKeyFeature) Valid() bool {
+	switch e {
+	case CryptoKeyFeatureWorkspaceApps,
+		CryptoKeyFeatureOidcConvert,
+		CryptoKeyFeaturePeerReconnect:
+		return true
+	}
+	return false
+}
+
+func AllCryptoKeyFeatureValues() []CryptoKeyFeature {
+	return []CryptoKeyFeature{
+		CryptoKeyFeatureWorkspaceApps,
+		CryptoKeyFeatureOidcConvert,
+		CryptoKeyFeaturePeerReconnect,
+	}
+}
+
 type DisplayApp string
 
 const (
@@ -2043,6 +2104,14 @@ type AuditLog struct {
 	ResourceIcon     string          `db:"resource_icon" json:"resource_icon"`
 }
 
+type CryptoKey struct {
+	Feature   CryptoKeyFeature `db:"feature" json:"feature"`
+	Sequence  int32            `db:"sequence" json:"sequence"`
+	Secret    sql.NullString   `db:"secret" json:"secret"`
+	StartsAt  time.Time        `db:"starts_at" json:"starts_at"`
+	DeletesAt sql.NullTime     `db:"deletes_at" json:"deletes_at"`
+}
+
 // Custom roles allow dynamic roles expanded at runtime
 type CustomRole struct {
 	Name            string                `db:"name" json:"name"`
@@ -2153,14 +2222,6 @@ type JfrogXrayScan struct {
 	High        int32     `db:"high" json:"high"`
 	Medium      int32     `db:"medium" json:"medium"`
 	ResultsUrl  string    `db:"results_url" json:"results_url"`
-}
-
-type Key struct {
-	Feature   string         `db:"feature" json:"feature"`
-	Sequence  int32          `db:"sequence" json:"sequence"`
-	Secret    sql.NullString `db:"secret" json:"secret"`
-	StartsAt  time.Time      `db:"starts_at" json:"starts_at"`
-	DeletesAt sql.NullTime   `db:"deletes_at" json:"deletes_at"`
 }
 
 type License struct {

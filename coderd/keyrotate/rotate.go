@@ -5,11 +5,11 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
-	"log/slog"
 	"time"
 
 	"golang.org/x/xerrors"
 
+	"cdr.dev/slog"
 	"github.com/coder/coder/v2/coderd/database"
 	"github.com/coder/coder/v2/coderd/database/dbtime"
 	"github.com/coder/quartz"
@@ -27,16 +27,28 @@ type KeyRotator struct {
 	Clock        quartz.Clock
 	Logger       slog.Logger
 	ScanInterval time.Duration
+	ResultsCh    chan []database.CryptoKey
+	features     []database.CryptoKeyFeature
 }
 
-func (kr *KeyRotator) Start(ctx context.Context) {
-	ticker := kr.Clock.NewTicker(kr.ScanInterval)
+func (k *KeyRotator) Start(ctx context.Context) {
+	ticker := k.Clock.NewTicker(k.ScanInterval)
 	defer ticker.Stop()
 
+	if len(k.features) == 0 {
+		k.features = database.AllCryptoKeyFeatureValues()
+	}
+
 	for {
-		err := kr.rotateKeys(ctx)
+		modifiedKeys, err := k.rotateKeys(ctx)
 		if err != nil {
-			kr.Logger.Error("rotate keys", slog.Any("error", err))
+			k.Logger.Error(ctx, "failed to rotate keys", slog.Error(err))
+		}
+
+		// This should only be called in test code so we don't
+		// both to select on the push.
+		if k.ResultsCh != nil {
+			k.ResultsCh <- modifiedKeys
 		}
 
 		select {
@@ -48,47 +60,101 @@ func (kr *KeyRotator) Start(ctx context.Context) {
 }
 
 // rotateKeys checks for keys nearing expiration and rotates them if necessary.
-func (kr *KeyRotator) rotateKeys(ctx context.Context) error {
-	return database.ReadModifyUpdate(kr.DB, func(tx database.Store) error {
-		keys, err := tx.GetKeys(ctx)
+func (k *KeyRotator) rotateKeys(ctx context.Context) ([]database.CryptoKey, error) {
+	var modifiedKeys []database.CryptoKey
+	return modifiedKeys, database.ReadModifyUpdate(k.DB, func(tx database.Store) error {
+		// Reset the modified keys slice for each iteration.
+		modifiedKeys = make([]database.CryptoKey, 0)
+		keys, err := tx.GetCryptoKeys(ctx)
 		if err != nil {
 			return xerrors.Errorf("get keys: %w", err)
 		}
 
-		now := dbtime.Time(kr.Clock.Now())
-		for _, key := range keys {
-			switch {
-			case shouldDeleteKey(key, now):
-				err := tx.DeleteKey(ctx, database.DeleteKeyParams{
-					Feature:  key.Feature,
-					Sequence: key.Sequence,
-				})
+		// Groups the keys by feature so that we can
+		// ensure we have at least one key for each feature.
+		keysByFeature := keysByFeature(keys)
+
+		now := dbtime.Time(k.Clock.Now())
+		for feature, keys := range keysByFeature {
+			// It's possible there are no keys if someone
+			// has manually deleted all the keys.
+			if len(keys) == 0 {
+				k.Logger.Info(ctx, "no valid keys detected, inserting new key",
+					slog.F("feature", feature),
+				)
+				newKey, err := k.insertNewKey(ctx, tx, feature, now)
 				if err != nil {
-					return xerrors.Errorf("delete key: %w", err)
+					return xerrors.Errorf("insert new key: %w", err)
 				}
-			case shouldRotateKey(key, kr.KeyDuration, now):
-				err := kr.rotateKey(ctx, tx, key)
-				if err != nil {
-					return xerrors.Errorf("rotate key: %w", err)
+				modifiedKeys = append(modifiedKeys, newKey)
+			}
+
+			for _, key := range keys {
+				switch {
+				case shouldDeleteKey(key, now):
+					deletedKey, err := tx.DeleteCryptoKey(ctx, database.DeleteCryptoKeyParams{
+						Feature:  key.Feature,
+						Sequence: key.Sequence,
+					})
+					if err != nil {
+						return xerrors.Errorf("delete key: %w", err)
+					}
+					modifiedKeys = append(modifiedKeys, deletedKey)
+				case shouldRotateKey(key, k.KeyDuration, now):
+					rotatedKeys, err := k.rotateKey(ctx, tx, key)
+					if err != nil {
+						return xerrors.Errorf("rotate key: %w", err)
+					}
+					modifiedKeys = append(modifiedKeys, rotatedKeys...)
+				default:
+					continue
 				}
-			default:
-				continue
 			}
 		}
 		return nil
 	})
 }
 
-func (kr *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key database.Key) error {
-	newStartsAt := key.ExpiresAt(kr.KeyDuration)
+func (k *KeyRotator) insertNewKey(ctx context.Context, tx database.Store, feature database.CryptoKeyFeature, now time.Time) (database.CryptoKey, error) {
+	secret, err := generateNewSecret(feature)
+	if err != nil {
+		return database.CryptoKey{}, xerrors.Errorf("generate new secret: %w", err)
+	}
+
+	latestKey, err := tx.GetLatestCryptoKeyByFeature(ctx, feature)
+	if err != nil && !xerrors.Is(err, sql.ErrNoRows) {
+		return database.CryptoKey{}, xerrors.Errorf("get latest key: %w", err)
+	}
+
+	newKey, err := tx.InsertCryptoKey(ctx, database.InsertCryptoKeyParams{
+		Feature: feature,
+		// We'll assume that the first key we insert is 1.
+		Sequence: latestKey.Sequence + 1,
+		Secret: sql.NullString{
+			String: secret,
+			Valid:  true,
+		},
+		StartsAt: now,
+	})
+	if err != nil {
+		return database.CryptoKey{}, xerrors.Errorf("inserting new key: %w", err)
+	}
+
+	k.Logger.Info(ctx, "inserted new key for feature", slog.F("feature", feature))
+	return newKey, nil
+}
+
+func (k *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key database.CryptoKey) ([]database.CryptoKey, error) {
+	// The starts at of the new key is the expiration of the old key.
+	newStartsAt := key.ExpiresAt(k.KeyDuration)
 
 	secret, err := generateNewSecret(key.Feature)
 	if err != nil {
-		return xerrors.Errorf("generate new secret: %w", err)
+		return nil, xerrors.Errorf("generate new secret: %w", err)
 	}
 
 	// Insert new key
-	err = tx.InsertKey(ctx, database.InsertKeyParams{
+	newKey, err := tx.InsertCryptoKey(ctx, database.InsertCryptoKeyParams{
 		Feature:  key.Feature,
 		Sequence: key.Sequence + 1,
 		Secret: sql.NullString{
@@ -98,14 +164,13 @@ func (kr *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key data
 		StartsAt: newStartsAt,
 	})
 	if err != nil {
-		return xerrors.Errorf("inserting new key: %w", err)
+		return nil, xerrors.Errorf("inserting new key: %w", err)
 	}
 
-	// Update old key's deletes_at
-	maxTokenLength := tokenLength(key.Feature)
-	deletesAt := newStartsAt.Add(time.Hour).Add(maxTokenLength)
+	// Set old key's deletes_at
+	deletesAt := newStartsAt.Add(time.Hour).Add(tokenDuration(key.Feature))
 
-	err = tx.UpdateKeyDeletesAt(ctx, database.UpdateKeyDeletesAtParams{
+	updatedKey, err := tx.UpdateCryptoKeyDeletesAt(ctx, database.UpdateCryptoKeyDeletesAtParams{
 		Feature:  key.Feature,
 		Sequence: key.Sequence,
 		DeletesAt: sql.NullTime{
@@ -114,19 +179,19 @@ func (kr *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key data
 		},
 	})
 	if err != nil {
-		return xerrors.Errorf("update old key's deletes_at: %w", err)
+		return nil, xerrors.Errorf("update old key's deletes_at: %w", err)
 	}
 
-	return nil
+	return []database.CryptoKey{updatedKey, newKey}, nil
 }
 
-func generateNewSecret(feature string) (string, error) {
+func generateNewSecret(feature database.CryptoKeyFeature) (string, error) {
 	switch feature {
-	case "workspace_apps":
+	case database.CryptoKeyFeatureWorkspaceApps:
 		return generateKey(96)
-	case "oidc_convert":
+	case database.CryptoKeyFeatureOidcConvert:
 		return generateKey(32)
-	case "peer_reconnect":
+	case database.CryptoKeyFeaturePeerReconnect:
 		return generateKey(64)
 	}
 	return "", xerrors.Errorf("unknown feature: %s", feature)
@@ -141,24 +206,40 @@ func generateKey(length int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func tokenLength(feature string) time.Duration {
+func tokenDuration(feature database.CryptoKeyFeature) time.Duration {
 	switch feature {
-	case "workspace_apps":
+	case database.CryptoKeyFeatureWorkspaceApps:
 		return WorkspaceAppsTokenDuration
-	case "oidc_convert":
+	case database.CryptoKeyFeatureOidcConvert:
 		return OIDCConvertTokenDuration
-	case "peer_reconnect":
+	case database.CryptoKeyFeaturePeerReconnect:
 		return PeerReconnectTokenDuration
 	default:
 		return 0
 	}
 }
 
-func shouldDeleteKey(key database.Key, now time.Time) bool {
+func shouldDeleteKey(key database.CryptoKey, now time.Time) bool {
 	return key.DeletesAt.Valid && key.DeletesAt.Time.After(now)
 }
 
-func shouldRotateKey(key database.Key, keyDuration time.Duration, now time.Time) bool {
+func shouldRotateKey(key database.CryptoKey, keyDuration time.Duration, now time.Time) bool {
+	// If deletes_at is set, we've already inserted a key.
+	if key.DeletesAt.Valid {
+		return false
+	}
 	expirationTime := key.ExpiresAt(keyDuration)
 	return now.Add(time.Hour).After(expirationTime)
+}
+
+func keysByFeature(keys []database.CryptoKey) map[database.CryptoKeyFeature][]database.CryptoKey {
+	m := map[database.CryptoKeyFeature][]database.CryptoKey{
+		database.CryptoKeyFeatureWorkspaceApps: {},
+		database.CryptoKeyFeatureOidcConvert:   {},
+		database.CryptoKeyFeaturePeerReconnect: {},
+	}
+	for _, key := range keys {
+		m[key.Feature] = append(m[key.Feature], key)
+	}
+	return m
 }
