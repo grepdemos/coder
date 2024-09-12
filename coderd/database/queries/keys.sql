@@ -17,8 +17,8 @@ FROM crypto_keys
 WHERE feature = $1
   AND sequence = $2
   AND secret IS NOT NULL
-  AND $3 >= starts_at
-  AND ($3 < deletes_at OR deletes_at IS NULL);
+  AND @time >= starts_at
+  AND (@time < deletes_at OR deletes_at IS NULL);
 
 -- name: DeleteCryptoKey :one
 UPDATE crypto_keys

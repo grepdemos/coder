@@ -893,6 +893,40 @@ func CustomRole(t testing.TB, db database.Store, seed database.CustomRole) datab
 	return role
 }
 
+func CryptoKey(t testing.TB, db database.Store, seed database.CryptoKey) database.CryptoKey {
+	t.Helper()
+
+	secret, err := cryptorand.String(10)
+	require.NoError(t, err, "generate secret")
+
+	sequence, err := cryptorand.Intn(1<<31 - 1)
+	require.NoError(t, err, "generate sequence")
+
+	feature, err := cryptorand.Element(database.AllCryptoKeyFeatureValues())
+	require.NoError(t, err, "generate feature")
+
+	key, err := db.InsertCryptoKey(genCtx, database.InsertCryptoKeyParams{
+		Sequence: takeFirst(seed.Sequence, int32(sequence)),
+		Secret: takeFirst(seed.Secret, sql.NullString{
+			String: secret,
+			Valid:  true,
+		}),
+		Feature:  takeFirst(seed.Feature, feature),
+		StartsAt: takeFirst(seed.StartsAt, time.Now()),
+	})
+	require.NoError(t, err, "insert crypto key")
+
+	if seed.DeletesAt.Valid {
+		key, err = db.UpdateCryptoKeyDeletesAt(genCtx, database.UpdateCryptoKeyDeletesAtParams{
+			Feature:   key.Feature,
+			Sequence:  key.Sequence,
+			DeletesAt: sql.NullTime{Time: seed.DeletesAt.Time, Valid: true},
+		})
+		require.NoError(t, err, "update crypto key deletes_at")
+	}
+	return key
+}
+
 func must[V any](v V, err error) V {
 	if err != nil {
 		panic(err)

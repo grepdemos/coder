@@ -72,7 +72,7 @@ func (k *KeyRotator) rotateKeys(ctx context.Context) ([]database.CryptoKey, erro
 
 		// Groups the keys by feature so that we can
 		// ensure we have at least one key for each feature.
-		keysByFeature := keysByFeature(keys)
+		keysByFeature := keysByFeature(keys, k.features)
 
 		now := dbtime.Time(k.Clock.Now())
 		for feature, keys := range keysByFeature {
@@ -232,11 +232,10 @@ func shouldRotateKey(key database.CryptoKey, keyDuration time.Duration, now time
 	return now.Add(time.Hour).After(expirationTime)
 }
 
-func keysByFeature(keys []database.CryptoKey) map[database.CryptoKeyFeature][]database.CryptoKey {
-	m := map[database.CryptoKeyFeature][]database.CryptoKey{
-		database.CryptoKeyFeatureWorkspaceApps: {},
-		database.CryptoKeyFeatureOidcConvert:   {},
-		database.CryptoKeyFeaturePeerReconnect: {},
+func keysByFeature(keys []database.CryptoKey, features []database.CryptoKeyFeature) map[database.CryptoKeyFeature][]database.CryptoKey {
+	m := map[database.CryptoKeyFeature][]database.CryptoKey{}
+	for _, feature := range features {
+		m[feature] = []database.CryptoKey{}
 	}
 	for _, key := range keys {
 		m[key.Feature] = append(m[key.Feature], key)

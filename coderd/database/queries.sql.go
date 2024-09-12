@@ -3201,11 +3201,11 @@ WHERE feature = $1
 type GetCryptoKeyByFeatureAndSequenceParams struct {
 	Feature  CryptoKeyFeature `db:"feature" json:"feature"`
 	Sequence int32            `db:"sequence" json:"sequence"`
-	StartsAt time.Time        `db:"starts_at" json:"starts_at"`
+	Time     time.Time        `db:"time" json:"time"`
 }
 
 func (q *sqlQuerier) GetCryptoKeyByFeatureAndSequence(ctx context.Context, arg GetCryptoKeyByFeatureAndSequenceParams) (CryptoKey, error) {
-	row := q.db.QueryRowContext(ctx, getCryptoKeyByFeatureAndSequence, arg.Feature, arg.Sequence, arg.StartsAt)
+	row := q.db.QueryRowContext(ctx, getCryptoKeyByFeatureAndSequence, arg.Feature, arg.Sequence, arg.Time)
 	var i CryptoKey
 	err := row.Scan(
 		&i.Feature,
