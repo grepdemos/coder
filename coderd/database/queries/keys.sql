@@ -16,9 +16,7 @@ SELECT *
 FROM crypto_keys
 WHERE feature = $1
   AND sequence = $2
-  AND secret IS NOT NULL
-  AND @time >= starts_at
-  AND (@time < deletes_at OR deletes_at IS NULL);
+  AND secret IS NOT NULL;
 
 -- name: DeleteCryptoKey :one
 UPDATE crypto_keys
@@ -42,13 +40,3 @@ INSERT INTO crypto_keys (
 UPDATE crypto_keys
 SET deletes_at = $3
 WHERE feature = $1 AND sequence = $2 RETURNING *;
-
-
-
-
-
-
-
-
-
-

@@ -73,8 +73,7 @@ func (k *KeyRotator) rotateKeys(ctx context.Context) ([]database.CryptoKey, erro
 		// Groups the keys by feature so that we can
 		// ensure we have at least one key for each feature.
 		keysByFeature := keysByFeature(keys, k.features)
-
-		now := dbtime.Time(k.Clock.Now())
+		now := dbtime.Time(k.Clock.Now().UTC())
 		for feature, keys := range keysByFeature {
 			// It's possible there are no keys if someone
 			// has manually deleted all the keys.
@@ -134,7 +133,7 @@ func (k *KeyRotator) insertNewKey(ctx context.Context, tx database.Store, featur
 			String: secret,
 			Valid:  true,
 		},
-		StartsAt: now,
+		StartsAt: now.UTC(),
 	})
 	if err != nil {
 		return database.CryptoKey{}, xerrors.Errorf("inserting new key: %w", err)
@@ -161,7 +160,7 @@ func (k *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key datab
 			String: secret,
 			Valid:  true,
 		},
-		StartsAt: newStartsAt,
+		StartsAt: newStartsAt.UTC(),
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("inserting new key: %w", err)
@@ -174,7 +173,7 @@ func (k *KeyRotator) rotateKey(ctx context.Context, tx database.Store, key datab
 		Feature:  key.Feature,
 		Sequence: key.Sequence,
 		DeletesAt: sql.NullTime{
-			Time:  deletesAt,
+			Time:  deletesAt.UTC(),
 			Valid: true,
 		},
 	})
@@ -220,7 +219,7 @@ func tokenDuration(feature database.CryptoKeyFeature) time.Duration {
 }
 
 func shouldDeleteKey(key database.CryptoKey, now time.Time) bool {
-	return key.DeletesAt.Valid && key.DeletesAt.Time.After(now)
+	return key.DeletesAt.Valid && key.DeletesAt.Time.UTC().After(now.UTC())
 }
 
 func shouldRotateKey(key database.CryptoKey, keyDuration time.Duration, now time.Time) bool {
@@ -229,7 +228,7 @@ func shouldRotateKey(key database.CryptoKey, keyDuration time.Duration, now time
 		return false
 	}
 	expirationTime := key.ExpiresAt(keyDuration)
-	return now.Add(time.Hour).After(expirationTime)
+	return now.Add(time.Hour).UTC().After(expirationTime.UTC())
 }
 
 func keysByFeature(keys []database.CryptoKey, features []database.CryptoKeyFeature) map[database.CryptoKeyFeature][]database.CryptoKey {

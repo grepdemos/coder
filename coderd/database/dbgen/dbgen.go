@@ -2,6 +2,7 @@ package dbgen
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -896,22 +897,17 @@ func CustomRole(t testing.TB, db database.Store, seed database.CustomRole) datab
 func CryptoKey(t testing.TB, db database.Store, seed database.CryptoKey) database.CryptoKey {
 	t.Helper()
 
-	secret, err := cryptorand.String(10)
+	b := make([]byte, 96)
+	_, err := rand.Read(b)
 	require.NoError(t, err, "generate secret")
 
-	sequence, err := cryptorand.Intn(1<<31 - 1)
-	require.NoError(t, err, "generate sequence")
-
-	feature, err := cryptorand.Element(database.AllCryptoKeyFeatureValues())
-	require.NoError(t, err, "generate feature")
-
 	key, err := db.InsertCryptoKey(genCtx, database.InsertCryptoKeyParams{
-		Sequence: takeFirst(seed.Sequence, int32(sequence)),
+		Sequence: takeFirst(seed.Sequence, 123),
 		Secret: takeFirst(seed.Secret, sql.NullString{
-			String: secret,
+			String: hex.EncodeToString(b),
 			Valid:  true,
 		}),
-		Feature:  takeFirst(seed.Feature, feature),
+		Feature:  takeFirst(seed.Feature, database.CryptoKeyFeatureWorkspaceApps),
 		StartsAt: takeFirst(seed.StartsAt, time.Now()),
 	})
 	require.NoError(t, err, "insert crypto key")

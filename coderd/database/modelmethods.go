@@ -449,5 +449,5 @@ func (r GetAuthorizationUserRolesRow) RoleNames() ([]rbac.RoleIdentifier, error)
 }
 
 func (k CryptoKey) ExpiresAt(keyDuration time.Duration) time.Time {
-	return k.StartsAt.Add(keyDuration)
+	return k.StartsAt.Add(keyDuration).UTC()
 }

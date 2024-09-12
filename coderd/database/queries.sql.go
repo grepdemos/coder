@@ -3194,18 +3194,15 @@ FROM crypto_keys
 WHERE feature = $1
   AND sequence = $2
   AND secret IS NOT NULL
-  AND $3 >= starts_at
-  AND ($3 < deletes_at OR deletes_at IS NULL)
 `
 
 type GetCryptoKeyByFeatureAndSequenceParams struct {
 	Feature  CryptoKeyFeature `db:"feature" json:"feature"`
 	Sequence int32            `db:"sequence" json:"sequence"`
-	Time     time.Time        `db:"time" json:"time"`
 }
 
 func (q *sqlQuerier) GetCryptoKeyByFeatureAndSequence(ctx context.Context, arg GetCryptoKeyByFeatureAndSequenceParams) (CryptoKey, error) {
-	row := q.db.QueryRowContext(ctx, getCryptoKeyByFeatureAndSequence, arg.Feature, arg.Sequence, arg.Time)
+	row := q.db.QueryRowContext(ctx, getCryptoKeyByFeatureAndSequence, arg.Feature, arg.Sequence)
 	var i CryptoKey
 	err := row.Scan(
 		&i.Feature,
