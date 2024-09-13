@@ -273,6 +273,16 @@ var (
 		Type: "workspace_dormant",
 	}
 
+	// ResourceWorkspacePrebuild
+	// Valid Actions
+	//  - "ActionCreate" :: create workspace prebuild
+	//  - "ActionDelete" :: delete workspace prebuild
+	//  - "ActionRead" :: read workspace prebuild
+	//  - "ActionUpdate" :: update workspace prebuild
+	ResourceWorkspacePrebuild = Object{
+		Type: "workspace_prebuild",
+	}
+
 	// ResourceWorkspaceProxy
 	// Valid Actions
 	//  - "ActionCreate" :: create a workspace proxy
@@ -314,6 +324,7 @@ func AllResources() []Objecter {
 		ResourceUser,
 		ResourceWorkspace,
 		ResourceWorkspaceDormant,
+		ResourceWorkspacePrebuild,
 		ResourceWorkspaceProxy,
 	}
 }

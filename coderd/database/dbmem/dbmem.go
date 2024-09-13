@@ -5969,6 +5969,14 @@ func (q *FakeQuerier) GetWorkspaceByWorkspaceAppID(_ context.Context, workspaceA
 	return database.Workspace{}, sql.ErrNoRows
 }
 
+func (q *FakeQuerier) GetWorkspacePrebuildParameters(ctx context.Context, workspacePrebuildID uuid.UUID) ([]database.WorkspacePrebuildParameter, error) {
+	panic("not implemented")
+}
+
+func (q *FakeQuerier) GetWorkspacePrebuilds(ctx context.Context) ([]database.WorkspacePrebuild, error) {
+	panic("not implemented")
+}
+
 func (q *FakeQuerier) GetWorkspaceProxies(_ context.Context) ([]database.WorkspaceProxy, error) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
@@ -9948,6 +9956,15 @@ func (q *FakeQuerier) UpsertWorkspaceAgentPortShare(_ context.Context, arg datab
 	q.workspaceAgentPortShares = append(q.workspaceAgentPortShares, psl)
 
 	return psl, nil
+}
+
+func (q *FakeQuerier) UpsertWorkspacePrebuild(ctx context.Context, arg database.UpsertWorkspacePrebuildParams) (database.WorkspacePrebuild, error) {
+	err := validateDatabaseType(arg)
+	if err != nil {
+		return database.WorkspacePrebuild{}, err
+	}
+
+	panic("not implemented")
 }
 
 func (q *FakeQuerier) GetAuthorizedTemplates(ctx context.Context, arg database.GetTemplatesWithFilterParams, prepared rbac.PreparedAuthorized) ([]database.Template, error) {

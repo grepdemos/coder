@@ -274,4 +274,12 @@ var RBACPermissions = map[string]PermissionDefinition{
 			ActionUpdate: actDef("update notification preferences"),
 		},
 	},
+	"workspace_prebuild": {
+		Actions: map[Action]ActionDefinition{
+			ActionCreate: actDef("create workspace prebuild"),
+			ActionRead:   actDef("read workspace prebuild"),
+			ActionUpdate: actDef("update workspace prebuild"),
+			ActionDelete: actDef("delete workspace prebuild"),
+		},
+	},
 }
