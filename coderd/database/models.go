@@ -2105,11 +2105,12 @@ type AuditLog struct {
 }
 
 type CryptoKey struct {
-	Feature   CryptoKeyFeature `db:"feature" json:"feature"`
-	Sequence  int32            `db:"sequence" json:"sequence"`
-	Secret    sql.NullString   `db:"secret" json:"secret"`
-	StartsAt  time.Time        `db:"starts_at" json:"starts_at"`
-	DeletesAt sql.NullTime     `db:"deletes_at" json:"deletes_at"`
+	Feature     CryptoKeyFeature `db:"feature" json:"feature"`
+	Sequence    int32            `db:"sequence" json:"sequence"`
+	Secret      sql.NullString   `db:"secret" json:"secret"`
+	SecretKeyID sql.NullString   `db:"secret_key_id" json:"secret_key_id"`
+	StartsAt    time.Time        `db:"starts_at" json:"starts_at"`
+	DeletesAt   sql.NullTime     `db:"deletes_at" json:"deletes_at"`
 }
 
 // Custom roles allow dynamic roles expanded at runtime

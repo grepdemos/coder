@@ -153,6 +153,7 @@ type data struct {
 	// New tables
 	workspaceAgentStats           []database.WorkspaceAgentStat
 	auditLogs                     []database.AuditLog
+	cryptoKeys                    []database.CryptoKey
 	dbcryptKeys                   []database.DBCryptKey
 	files                         []database.File
 	externalAuthLinks             []database.ExternalAuthLink
@@ -2318,13 +2319,26 @@ func (q *FakeQuerier) GetCoordinatorResumeTokenSigningKey(_ context.Context) (st
 	return q.coordinatorResumeTokenSigningKey, nil
 }
 
-func (q *FakeQuerier) GetCryptoKeyByFeatureAndSequence(ctx context.Context, arg database.GetCryptoKeyByFeatureAndSequenceParams) (database.CryptoKey, error) {
+func (q *FakeQuerier) GetCryptoKeyByFeatureAndSequence(_ context.Context, arg database.GetCryptoKeyByFeatureAndSequenceParams) (database.CryptoKey, error) {
 	err := validateDatabaseType(arg)
 	if err != nil {
 		return database.CryptoKey{}, err
 	}
 
-	panic("not implemented")
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
+
+	for _, key := range q.cryptoKeys {
+		if key.Feature == arg.Feature && key.Sequence == arg.Sequence {
+			// Keys with NULL secrets are considered deleted.
+			if key.Secret.Valid {
+				return key, nil
+			}
+			return database.CryptoKey{}, sql.ErrNoRows
+		}
+	}
+
+	return database.CryptoKey{}, sql.ErrNoRows
 }
 
 func (q *FakeQuerier) GetCryptoKeys(ctx context.Context) ([]database.CryptoKey, error) {
@@ -6331,13 +6345,26 @@ func (q *FakeQuerier) InsertAuditLog(_ context.Context, arg database.InsertAudit
 	return alog, nil
 }
 
-func (q *FakeQuerier) InsertCryptoKey(ctx context.Context, arg database.InsertCryptoKeyParams) (database.CryptoKey, error) {
+func (q *FakeQuerier) InsertCryptoKey(_ context.Context, arg database.InsertCryptoKeyParams) (database.CryptoKey, error) {
 	err := validateDatabaseType(arg)
 	if err != nil {
 		return database.CryptoKey{}, err
 	}
 
-	panic("not implemented")
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	key := database.CryptoKey{
+		Feature:     arg.Feature,
+		Sequence:    arg.Sequence,
+		Secret:      arg.Secret,
+		SecretKeyID: arg.SecretKeyID,
+		StartsAt:    arg.StartsAt,
+	}
+
+	q.cryptoKeys = append(q.cryptoKeys, key)
+
+	return key, nil
 }
 
 func (q *FakeQuerier) InsertCustomRole(_ context.Context, arg database.InsertCustomRoleParams) (database.CustomRole, error) {

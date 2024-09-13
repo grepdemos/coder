@@ -184,15 +184,3 @@ func requireKey(t *testing.T, key database.CryptoKey, feature database.CryptoKey
 		t.Fatalf("unknown key feature: %s", key.Feature)
 	}
 }
-
-func requireContainsAllFeatures(t *testing.T, keys []database.CryptoKey) {
-	t.Helper()
-
-	features := make(map[database.CryptoKeyFeature]bool)
-	for _, key := range keys {
-		features[key.Feature] = true
-	}
-	require.True(t, features[database.CryptoKeyFeatureOidcConvert])
-	require.True(t, features[database.CryptoKeyFeatureWorkspaceApps])
-	require.True(t, features[database.CryptoKeyFeaturePeerReconnect])
-}

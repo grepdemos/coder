@@ -907,8 +907,9 @@ func CryptoKey(t testing.TB, db database.Store, seed database.CryptoKey) databas
 			String: hex.EncodeToString(b),
 			Valid:  true,
 		}),
-		Feature:  takeFirst(seed.Feature, database.CryptoKeyFeatureWorkspaceApps),
-		StartsAt: takeFirst(seed.StartsAt, time.Now()),
+		SecretKeyID: takeFirst(seed.SecretKeyID, sql.NullString{}),
+		Feature:     takeFirst(seed.Feature, database.CryptoKeyFeatureWorkspaceApps),
+		StartsAt:    takeFirst(seed.StartsAt, time.Now()),
 	})
 	require.NoError(t, err, "insert crypto key")
 

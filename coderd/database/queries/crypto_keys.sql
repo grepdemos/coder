@@ -28,12 +28,14 @@ INSERT INTO crypto_keys (
     feature,
     sequence,
     secret,
-    starts_at
+    starts_at,
+	secret_key_id
 ) VALUES (
     $1,
     $2,
     $3,
-    $4
+    $4,
+	$5
 ) RETURNING *;
 
 -- name: UpdateCryptoKeyDeletesAt :one
