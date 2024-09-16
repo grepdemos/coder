@@ -2708,7 +2708,8 @@ type Workspace struct {
 	DeletingAt        sql.NullTime     `db:"deleting_at" json:"deleting_at"`
 	AutomaticUpdates  AutomaticUpdates `db:"automatic_updates" json:"automatic_updates"`
 	// Favorite is true if the workspace owner has favorited the workspace.
-	Favorite bool `db:"favorite" json:"favorite"`
+	Favorite   bool          `db:"favorite" json:"favorite"`
+	PrebuildID uuid.NullUUID `db:"prebuild_id" json:"prebuild_id"`
 }
 
 type WorkspaceAgent struct {
@@ -2917,6 +2918,24 @@ type WorkspaceBuildTable struct {
 	Reason            BuildReason         `db:"reason" json:"reason"`
 	DailyCost         int32               `db:"daily_cost" json:"daily_cost"`
 	MaxDeadline       time.Time           `db:"max_deadline" json:"max_deadline"`
+}
+
+type WorkspacePrebuild struct {
+	ID                uuid.UUID     `db:"id" json:"id"`
+	Name              string        `db:"name" json:"name"`
+	Replicas          int32         `db:"replicas" json:"replicas"`
+	OrganizationID    uuid.UUID     `db:"organization_id" json:"organization_id"`
+	TemplateID        uuid.UUID     `db:"template_id" json:"template_id"`
+	TemplateVersionID uuid.UUID     `db:"template_version_id" json:"template_version_id"`
+	CreatedBy         uuid.NullUUID `db:"created_by" json:"created_by"`
+	CreatedAt         time.Time     `db:"created_at" json:"created_at"`
+	UpdatedAt         time.Time     `db:"updated_at" json:"updated_at"`
+}
+
+type WorkspacePrebuildParameter struct {
+	WorkspacePrebuildID uuid.UUID `db:"workspace_prebuild_id" json:"workspace_prebuild_id"`
+	Name                string    `db:"name" json:"name"`
+	Value               string    `db:"value" json:"value"`
 }
 
 type WorkspaceProxy struct {

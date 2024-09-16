@@ -1481,6 +1481,27 @@ func (m metricsStore) GetWorkspaceByWorkspaceAppID(ctx context.Context, workspac
 	return workspace, err
 }
 
+func (m metricsStore) GetWorkspacePrebuildByID(ctx context.Context, id uuid.UUID) (database.WorkspacePrebuild, error) {
+	start := time.Now()
+	r0, r1 := m.s.GetWorkspacePrebuildByID(ctx, id)
+	m.queryLatencies.WithLabelValues("GetWorkspacePrebuildByID").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
+func (m metricsStore) GetWorkspacePrebuildParameters(ctx context.Context, workspacePrebuildID uuid.UUID) ([]database.WorkspacePrebuildParameter, error) {
+	start := time.Now()
+	r0, r1 := m.s.GetWorkspacePrebuildParameters(ctx, workspacePrebuildID)
+	m.queryLatencies.WithLabelValues("GetWorkspacePrebuildParameters").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
+func (m metricsStore) GetWorkspacePrebuilds(ctx context.Context) ([]database.WorkspacePrebuild, error) {
+	start := time.Now()
+	r0, r1 := m.s.GetWorkspacePrebuilds(ctx)
+	m.queryLatencies.WithLabelValues("GetWorkspacePrebuilds").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
 func (m metricsStore) GetWorkspaceProxies(ctx context.Context) ([]database.WorkspaceProxy, error) {
 	start := time.Now()
 	proxies, err := m.s.GetWorkspaceProxies(ctx)
@@ -2549,6 +2570,13 @@ func (m metricsStore) UpsertWorkspaceAgentPortShare(ctx context.Context, arg dat
 	start := time.Now()
 	r0, r1 := m.s.UpsertWorkspaceAgentPortShare(ctx, arg)
 	m.queryLatencies.WithLabelValues("UpsertWorkspaceAgentPortShare").Observe(time.Since(start).Seconds())
+	return r0, r1
+}
+
+func (m metricsStore) UpsertWorkspacePrebuild(ctx context.Context, arg database.UpsertWorkspacePrebuildParams) (database.WorkspacePrebuild, error) {
+	start := time.Now()
+	r0, r1 := m.s.UpsertWorkspacePrebuild(ctx, arg)
+	m.queryLatencies.WithLabelValues("UpsertWorkspacePrebuild").Observe(time.Since(start).Seconds())
 	return r0, r1
 }
 

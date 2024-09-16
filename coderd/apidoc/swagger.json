@@ -10606,6 +10606,7 @@
 				"user",
 				"workspace",
 				"workspace_dormant",
+				"workspace_prebuild",
 				"workspace_proxy"
 			],
 			"x-enum-varnames": [
@@ -10637,6 +10638,7 @@
 				"ResourceUser",
 				"ResourceWorkspace",
 				"ResourceWorkspaceDormant",
+				"ResourceWorkspacePrebuild",
 				"ResourceWorkspaceProxy"
 			]
 		},

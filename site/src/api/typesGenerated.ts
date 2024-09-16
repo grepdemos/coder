@@ -324,6 +324,17 @@ export interface CreateWorkspaceBuildRequest {
 	readonly log_level?: ProvisionerLogLevel;
 }
 
+// From codersdk/workspaceprebuilds.go
+export interface CreateWorkspacePrebuildRequest {
+	readonly CreatedBy: string;
+	readonly template_id: string;
+	readonly template_version_id: string;
+	readonly OrganizationID: string;
+	readonly name: string;
+	readonly rich_parameter_values?: Readonly<Array<WorkspacePrebuildParameter>>;
+	readonly replicas: number;
+}
+
 // From codersdk/workspaceproxy.go
 export interface CreateWorkspaceProxyRequest {
 	readonly name: string;
@@ -1947,6 +1958,26 @@ export interface WorkspaceOptions {
 	readonly include_deleted?: boolean;
 }
 
+// From codersdk/workspaceprebuilds.go
+export interface WorkspacePrebuild {
+	readonly id: string;
+	readonly name: string;
+	readonly replicas: number;
+	readonly organization_id: string;
+	readonly template_id: string;
+	readonly template_version_id: string;
+	readonly created_by?: string;
+	readonly created_at: string;
+	readonly updated_at: string;
+}
+
+// From codersdk/workspaceprebuilds.go
+export interface WorkspacePrebuildParameter {
+	readonly workspace_prebuild_id: string;
+	readonly name: string;
+	readonly value: string;
+}
+
 // From codersdk/workspaceproxy.go
 export interface WorkspaceProxy extends Region {
 	readonly derp_enabled: boolean;
@@ -2115,8 +2146,8 @@ export type RBACAction = "application_connect" | "assign" | "create" | "delete" 
 export const RBACActions: RBACAction[] = ["application_connect", "assign", "create", "delete", "read", "read_personal", "ssh", "start", "stop", "update", "update_personal", "use", "view_insights"]
 
 // From codersdk/rbacresources_gen.go
-export type RBACResource = "*" | "api_key" | "assign_org_role" | "assign_role" | "audit_log" | "debug_info" | "deployment_config" | "deployment_stats" | "file" | "group" | "group_member" | "license" | "notification_preference" | "notification_template" | "oauth2_app" | "oauth2_app_code_token" | "oauth2_app_secret" | "organization" | "organization_member" | "provisioner_daemon" | "provisioner_keys" | "replicas" | "system" | "tailnet_coordinator" | "template" | "user" | "workspace" | "workspace_dormant" | "workspace_proxy"
-export const RBACResources: RBACResource[] = ["*", "api_key", "assign_org_role", "assign_role", "audit_log", "debug_info", "deployment_config", "deployment_stats", "file", "group", "group_member", "license", "notification_preference", "notification_template", "oauth2_app", "oauth2_app_code_token", "oauth2_app_secret", "organization", "organization_member", "provisioner_daemon", "provisioner_keys", "replicas", "system", "tailnet_coordinator", "template", "user", "workspace", "workspace_dormant", "workspace_proxy"]
+export type RBACResource = "*" | "api_key" | "assign_org_role" | "assign_role" | "audit_log" | "debug_info" | "deployment_config" | "deployment_stats" | "file" | "group" | "group_member" | "license" | "notification_preference" | "notification_template" | "oauth2_app" | "oauth2_app_code_token" | "oauth2_app_secret" | "organization" | "organization_member" | "provisioner_daemon" | "provisioner_keys" | "replicas" | "system" | "tailnet_coordinator" | "template" | "user" | "workspace" | "workspace_dormant" | "workspace_prebuild" | "workspace_proxy"
+export const RBACResources: RBACResource[] = ["*", "api_key", "assign_org_role", "assign_role", "audit_log", "debug_info", "deployment_config", "deployment_stats", "file", "group", "group_member", "license", "notification_preference", "notification_template", "oauth2_app", "oauth2_app_code_token", "oauth2_app_secret", "organization", "organization_member", "provisioner_daemon", "provisioner_keys", "replicas", "system", "tailnet_coordinator", "template", "user", "workspace", "workspace_dormant", "workspace_prebuild", "workspace_proxy"]
 
 // From codersdk/audit.go
 export type ResourceType = "api_key" | "convert_login" | "custom_role" | "git_ssh_key" | "group" | "health_settings" | "license" | "notifications_settings" | "oauth2_provider_app" | "oauth2_provider_app_secret" | "organization" | "template" | "template_version" | "user" | "workspace" | "workspace_build" | "workspace_proxy"
