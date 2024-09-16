@@ -55,13 +55,15 @@ import (
 
 	"cdr.dev/slog"
 	"cdr.dev/slog/sloggers/sloghuman"
-	"github.com/coder/coder/v2/coderd/entitlements"
-	"github.com/coder/coder/v2/coderd/runtimeconfig"
 	"github.com/coder/pretty"
 	"github.com/coder/quartz"
 	"github.com/coder/retry"
 	"github.com/coder/serpent"
 	"github.com/coder/wgtunnel/tunnelsdk"
+
+	"github.com/coder/coder/v2/coderd/entitlements"
+	"github.com/coder/coder/v2/coderd/runtimeconfig"
+	"github.com/coder/coder/v2/coderd/workspaceprebuilds"
 
 	"github.com/coder/coder/v2/buildinfo"
 	"github.com/coder/coder/v2/cli/clilog"
@@ -1023,6 +1025,16 @@ func (r *RootCmd) Server(newAPI func(context.Context, *coderd.Options) (*coderd.
 				notificationsManager.Run(dbauthz.AsSystemRestricted(ctx))
 			}
 
+			// Always create the coordinator, but only Run() it if enabled.
+			options.PrebuildsCoordinator = *workspaceprebuilds.NewCoordinator(options.Database, options.Pubsub, coderAPI.Authorize, logger.Named("prebuilds"))
+			if experiments.Enabled(codersdk.ExperimentWorkspacePrebuilds) {
+				go func() {
+					// nolint:gocritic // TODO: create own role.
+					err = options.PrebuildsCoordinator.Run(dbauthz.AsSystemRestricted(ctx))
+					logger.Info(ctx, "prebuild coordinator exited", slog.Error(err))
+				}()
+			}
+
 			// Wrap the server in middleware that redirects to the access URL if
 			// the request is not to a local IP.
 			var handler http.Handler = coderAPI.RootHandler
@@ -1155,6 +1167,11 @@ func (r *RootCmd) Server(newAPI func(context.Context, *coderd.Options) (*coderd.
 				} else {
 					cliui.Info(inv.Stdout, "Gracefully shut down notifications manager\n")
 				}
+			}
+
+			err = shutdownWithTimeout(options.PrebuildsCoordinator.Stop, 5*time.Second)
+			if err != nil {
+				cliui.Warnf(inv.Stderr, "Prebuilds manager shutdown took longer than 5s: %s\n", err)
 			}
 
 			// Shut down provisioners before waiting for WebSockets

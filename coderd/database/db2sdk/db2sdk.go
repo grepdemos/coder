@@ -639,7 +639,7 @@ func WorkspacePrebuild(pb database.WorkspacePrebuild) codersdk.WorkspacePrebuild
 	return codersdk.WorkspacePrebuild{
 		ID:                pb.ID,
 		Name:              pb.Name,
-		Replicas:          int(pb.Replicas),
+		Replicas:          pb.Replicas,
 		OrganizationID:    pb.OrganizationID,
 		TemplateID:        pb.TemplateID,
 		TemplateVersionID: pb.TemplateVersionID,

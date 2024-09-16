@@ -10065,7 +10065,8 @@ const docTemplate = `{
                 "multi-organization",
                 "custom-roles",
                 "notifications",
-                "workspace-usage"
+                "workspace-usage",
+                "workspace-prebuilds"
             ],
             "x-enum-comments": {
                 "ExperimentAutoFillParameters": "This should not be taken out of experiments until we have redesigned the feature.",
@@ -10073,6 +10074,7 @@ const docTemplate = `{
                 "ExperimentExample": "This isn't used for anything.",
                 "ExperimentMultiOrganization": "Requires organization context for interactions, default org is assumed.",
                 "ExperimentNotifications": "Sends notifications via SMTP and webhooks following certain events.",
+                "ExperimentWorkspacePrebuilds": "Provision workspaces asynchronously to speed up workspace creation.",
                 "ExperimentWorkspaceUsage": "Enables the new workspace usage tracking."
             },
             "x-enum-varnames": [
@@ -10081,7 +10083,8 @@ const docTemplate = `{
                 "ExperimentMultiOrganization",
                 "ExperimentCustomRoles",
                 "ExperimentNotifications",
-                "ExperimentWorkspaceUsage"
+                "ExperimentWorkspaceUsage",
+                "ExperimentWorkspacePrebuilds"
             ]
         },
         "codersdk.ExternalAuth": {
