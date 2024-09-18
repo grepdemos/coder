@@ -42,6 +42,7 @@ type API struct {
 	*AppsAPI
 	*MetadataAPI
 	*LogsAPI
+	*ScriptsAPI
 	*tailnet.DRPCService
 
 	mu                sync.Mutex
@@ -150,6 +151,11 @@ func New(opts Options) *API {
 		Log:                               opts.Log,
 		PublishWorkspaceUpdateFn:          api.publishWorkspaceUpdate,
 		PublishWorkspaceAgentLogsUpdateFn: opts.PublishWorkspaceAgentLogsUpdateFn,
+	}
+
+	api.ScriptsAPI = &ScriptsAPI{
+		AgentID:  opts.AgentID,
+		Database: opts.Database,
 	}
 
 	api.DRPCService = &tailnet.DRPCService{

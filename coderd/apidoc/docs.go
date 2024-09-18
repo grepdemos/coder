@@ -14252,6 +14252,9 @@ const docTemplate = `{
                 "cron": {
                     "type": "string"
                 },
+                "display_name": {
+                    "type": "string"
+                },
                 "log_path": {
                     "type": "string"
                 },
