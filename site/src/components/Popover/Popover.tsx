@@ -1,10 +1,12 @@
 import MuiPopover, {
 	type PopoverProps as MuiPopoverProps,
-	// biome-ignore lint/nursery/noRestrictedImports: Used as base component
+	// biome-ignore lint/nursery/noRestrictedImports: This is the base component that our custom popover is based on
 } from "@mui/material/Popover";
 import {
 	type FC,
 	type HTMLAttributes,
+	type PointerEvent,
+	type PointerEventHandler,
 	type ReactElement,
 	type ReactNode,
 	type RefObject,
@@ -95,17 +97,20 @@ export const PopoverTrigger = (
 	const { children, ...elementProps } = props;
 
 	const clickProps = {
-		onClick: () => {
+		onClick: (event: PointerEvent<HTMLElement>) => {
 			popover.setOpen(true);
+			elementProps.onClick?.(event);
 		},
 	};
 
 	const hoverProps = {
-		onPointerEnter: () => {
+		onPointerEnter: (event: PointerEvent<HTMLElement>) => {
 			popover.setOpen(true);
+			elementProps.onPointerEnter?.(event);
 		},
-		onPointerLeave: () => {
+		onPointerLeave: (event: PointerEvent<HTMLElement>) => {
 			popover.setOpen(false);
+			elementProps.onPointerLeave?.(event);
 		},
 	};
 
@@ -130,6 +135,8 @@ export type PopoverContentProps = Omit<
 
 export const PopoverContent: FC<PopoverContentProps> = ({
 	horizontal = "left",
+	onPointerEnter,
+	onPointerLeave,
 	...popoverProps
 }) => {
 	const popover = usePopover();
@@ -152,7 +159,7 @@ export const PopoverContent: FC<PopoverContentProps> = ({
 				},
 			}}
 			{...horizontalProps(horizontal)}
-			{...modeProps(popover)}
+			{...modeProps(popover, onPointerEnter, onPointerLeave)}
 			{...popoverProps}
 			id={popover.id}
 			open={popover.open}
@@ -162,14 +169,20 @@ export const PopoverContent: FC<PopoverContentProps> = ({
 	);
 };
 
-const modeProps = (popover: PopoverContextValue) => {
+const modeProps = (
+	popover: PopoverContextValue,
+	externalOnPointerEnter: PointerEventHandler<HTMLDivElement> | undefined,
+	externalOnPointerLeave: PointerEventHandler<HTMLDivElement> | undefined,
+) => {
 	if (popover.mode === "hover") {
 		return {
-			onPointerEnter: () => {
+			onPointerEnter: (event: PointerEvent<HTMLDivElement>) => {
 				popover.setOpen(true);
+				externalOnPointerEnter?.(event);
 			},
-			onPointerLeave: () => {
+			onPointerLeave: (event: PointerEvent<HTMLDivElement>) => {
 				popover.setOpen(false);
+				externalOnPointerLeave?.(event);
 			},
 		};
 	}
